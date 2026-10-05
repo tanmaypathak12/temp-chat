@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Chat — Temp Chat</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="chat-page">
+
+        <header class="chat-header">
+
+            <div>
+                <h1>Temp Chat</h1>
+
+                <p>
+                    Room:
+                    <strong id="roomCode">------</strong>
+                </p>
+            </div>
+
+            <button id="leaveButton" class="leave-btn">
+                Leave
+            </button>
+
+        </header>
+
+
+        <section id="messages" class="messages">
+
+            <div class="system-message">
+                Connecting to chat...
+            </div>
+
+        </section>
+
+
+        <div class="chat-input-area">
+
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Type a message..."
+                autocomplete="off"
+                maxlength="500"
+            >
+
+            <button id="sendButton">
+                Send
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <script type="module">
+
+        import { initializeApp } from
+        "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+
+        import {
+            getAuth,
+            signInAnonymously,
+            onAuthStateChanged
+        } from
+        "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
+        import {
+            getDatabase,
+            ref,
+            get,
+            set,
+            push,
+            onValue,
+            remove,
+            onDisconnect,
+            serverTimestamp
+        } from
+        "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+
+
+        /* =========================
+           FIREBASE
+           ========================= */
+
+        const firebaseConfig = {
+
+            apiKey:
+                "AIzaSyCBmRCHSEcRLftZ52_w02sbRpFPEQw0cxU",
+
+            authDomain:
+                "temp-chat-b15be.firebaseapp.com",
+
+            databaseURL:
+                "https://temp-chat-b15be-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+            projectId:
+                "temp-chat-b15be",
+
+            storageBucket:
+                "temp-chat-b15be.firebasestorage.app",
+
+            messagingSenderId:
+                "1086824753488",
+
+            appId:
+                "1:1086824753488:web:e801b6e773ceb94e076455"
+        };
+
+
+        const app = initializeApp(firebaseConfig);
+
+        const auth = getAuth(app);
+
+        const db = getDatabase(app);
+
+
+        /* =========================
+           GET ROOM
+           ========================= */
+
+        const urlParams =
+            new URLSearchParams(
+                window.location.search
+            );
+
+        const roomCode =
+            urlParams.get("room");
+
+
+        const roomCodeElement =
+            document.getElementById("roomCode");
+
+        const messagesElement =
+            document.getElementById("messages");
+
+        const messageInput =
+            document.getElementById("messageInput");
+
+        const sendButton =
+            document.getElementById("sendButton");
+
+        const leaveButton =
+            document.getElementById("leaveButton");
+
+
+        if (!roomCode) {
+
+            window.location.href = "index.html";
+
+        }
+
+
+        roomCodeElement.textContent =
+            roomCode;
+
+
+        /* =========================
+           USER
+           ========================= */
+
+        let currentUser = null;
+
+        let roomRef = null;
+
+        let messagesRef = null;
+
+
+        /* =========================
+           FORMAT TIME
+           ========================= */
+
+        function formatTime(timestamp) {
+
+            if (!timestamp) {
+                return "";
+            }
+
+            const date =
+                new Date(timestamp);
+
+            return date.toLocaleTimeString(
+                [],
+                {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+        }
+
+
+        /* =========================
+           DISPLAY MESSAGE
+           ========================= */
+
+        function displayMessages(snapshot) {
+
+            messagesElement.innerHTML = "";
+
+            if (!snapshot.exists()) {
+
+                messagesElement.innerHTML = `
+                    <div class="system-message">
+                        No messages yet. Say hello.
+                    </div>
+                `;
+
+                return;
+            }
+
+
+            const messages =
+                snapshot.val();
+
+
+            Object.entries(messages)
+                .forEach(([id, message]) => {
+
+                    if (!message) return;
+
+
+                    const wrapper =
+                        document.createElement("div");
+
+
+                    wrapper.classList.add(
+                        "message"
+                    );
+
+
+                    if (
+                        message.userId ===
+                        currentUser.uid
+                    ) {
+
+                        wrapper.classList.add(
+                            "mine"
+                        );
+
+                    } else {
+
+                        wrapper.classList.add(
+                            "theirs"
+                        );
+
+                    }
+
+
+                    const text =
+                        document.createElement("div");
+
+                    text.className =
+                        "message-text";
+
+                    text.textContent =
+                        message.text;
+
+
+                    const time =
+                        document.createElement("div");
+
+                    time.className =
+                        "message-time";
+
+                    time.textContent =
+                        formatTime(
+                            message.timestamp
+                        );
+
+
+                    wrapper.appendChild(text);
+
+                    wrapper.appendChild(time);
+
+                    messagesElement.appendChild(
+                        wrapper
+                    );
+
+                });
+
+
+            messagesElement.scrollTop =
+                messagesElement.scrollHeight;
+        }
+
+
+        /* =========================
+           SEND MESSAGE
+           ========================= */
+
+        async function sendMessage() {
+
+            const text =
+                messageInput.value.trim();
+
+
+            if (!text) {
+                return;
+            }
+
+
+            if (!currentUser) {
+                return;
+            }
+
+
+            try {
+
+                const newMessage =
+                    push(messagesRef);
+
+
+                await set(
+                    newMessage,
+                    {
+                        userId:
+                            currentUser.uid,
+
+                        text:
+                            text,
+
+                        timestamp:
+                            Date.now()
+                    }
+                );
+
+
+                messageInput.value = "";
+
+                messageInput.focus();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "Could not send message."
+                );
+
+            }
+        }
+
+
+        sendButton.addEventListener(
+            "click",
+            sendMessage
+        );
+
+
+        messageInput.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "Enter"
+                ) {
+
+                    sendMessage();
+
+                }
+
+            }
+        );
+
+
+        /* =========================
+           LEAVE CHAT
+           ========================= */
+
+        async function leaveChat() {
+
+            if (!currentUser) {
+                return;
+            }
+
+
+            try {
+
+                await remove(
+                    ref(
+                        db,
+                        "rooms/" +
+                        roomCode +
+                        "/users/" +
+                        currentUser.uid
+                    )
+                );
+
+
+                window.location.href =
+                    "index.html";
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                window.location.href =
+                    "index.html";
+
+            }
+
+        }
+
+
+        leaveButton.addEventListener(
+            "click",
+            leaveChat
+        );
+
+
+        /* =========================
+           AUTHENTICATION
+           ========================= */
+
+        signInAnonymously(auth)
+            .catch(error => {
+
+                console.error(error);
+
+                alert(
+                    "Could not connect to chat."
+                );
+
+            });
+
+
+        onAuthStateChanged(
+            auth,
+            async user => {
+
+                if (!user) {
+                    return;
+                }
+
+
+                currentUser = user;
+
+
+                roomRef =
+                    ref(
+                        db,
+                        "rooms/" +
+                        roomCode
+                    );
+
+
+                messagesRef =
+                    ref(
+                        db,
+                        "rooms/" +
+                        roomCode +
+                        "/messages"
+                    );
+
+
+                /* Check room exists */
+
+                const snapshot =
+                    await get(roomRef);
+
+
+                if (!snapshot.exists()) {
+
+                    alert(
+                        "This chat no longer exists."
+                    );
+
+                    window.location.href =
+                        "index.html";
+
+                    return;
+                }
+
+
+                /* Check user belongs to room */
+
+                const room =
+                    snapshot.val();
+
+
+                const users =
+                    room.users || {};
+
+
+                if (
+                    !users[currentUser.uid]
+                ) {
+
+                    alert(
+                        "You are not a member of this chat."
+                    );
+
+                    window.location.href =
+                        "index.html";
+
+                    return;
+
+                }
+
+
+                /* Listen for messages */
+
+                onValue(
+                    messagesRef,
+                    displayMessages
+                );
+
+
+                /* Remove user if connection disappears */
+
+                const userPresenceRef =
+                    ref(
+                        db,
+                        "rooms/" +
+                        roomCode +
+                        "/users/" +
+                        currentUser.uid
+                    );
+
+
+                onDisconnect(
+                    userPresenceRef
+                ).remove();
+
+
+                messageInput.focus();
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
