@@ -158,7 +158,6 @@
             push,
             onChildAdded,
             onValue,
-            onDisconnect,
             remove
         }
         from
@@ -210,7 +209,7 @@
 
 
         // ==========================================
-        // GET ROOM CODE
+        // ROOM CODE
         // ==========================================
 
         const urlParams =
@@ -225,7 +224,7 @@
 
 
         // ==========================================
-        // PAGE ELEMENTS
+        // ELEMENTS
         // ==========================================
 
         const roomCodeElement =
@@ -275,10 +274,13 @@
 
 
         // ==========================================
-        // CHECK ROOM CODE
+        // CHECK ROOM
         // ==========================================
 
-        if (!roomCode || roomCode.length !== 6) {
+        if (
+            !roomCode ||
+            roomCode.length !== 6
+        ) {
 
             alert(
                 "Invalid chat room."
@@ -310,25 +312,7 @@
 
 
         // ==========================================
-        // ESCAPE HTML
-        // ==========================================
-
-        function escapeHTML(text) {
-
-            const div =
-                document.createElement(
-                    "div"
-                );
-
-            div.textContent = text;
-
-            return div.innerHTML;
-
-        }
-
-
-        // ==========================================
-        // SHOW STATUS
+        // STATUS
         // ==========================================
 
         function setStatus(
@@ -338,6 +322,7 @@
 
             statusText.textContent =
                 text;
+
 
             if (online) {
 
@@ -357,6 +342,164 @@
 
 
         // ==========================================
+        // FORMAT TIME
+        // ==========================================
+
+        function formatTime(
+            timestamp
+        ) {
+
+            if (!timestamp) {
+                return "";
+            }
+
+
+            const date =
+                new Date(timestamp);
+
+
+            return date.toLocaleTimeString(
+                [],
+                {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+
+        }
+
+
+        // ==========================================
+        // DISPLAY MESSAGE
+        // ==========================================
+
+        function displayMessage(
+            message
+        ) {
+
+            if (!message) {
+                return;
+            }
+
+
+            // Remove empty message
+
+            if (
+                emptyMessage &&
+                emptyMessage.parentNode
+            ) {
+
+                emptyMessage.remove();
+
+            }
+
+
+            // Message wrapper
+
+            const messageDiv =
+                document.createElement(
+                    "div"
+                );
+
+
+            messageDiv.classList.add(
+                "message"
+            );
+
+
+            // Check sender
+
+            if (
+                currentUser &&
+                message.userId ===
+                currentUser.uid
+            ) {
+
+                messageDiv.classList.add(
+                    "my-message"
+                );
+
+            } else {
+
+                messageDiv.classList.add(
+                    "other-message"
+                );
+
+            }
+
+
+            // Bubble
+
+            const bubble =
+                document.createElement(
+                    "div"
+                );
+
+            bubble.classList.add(
+                "message-bubble"
+            );
+
+
+            // Text
+
+            const messageText =
+                document.createElement(
+                    "div"
+                );
+
+            messageText.classList.add(
+                "message-text"
+            );
+
+            messageText.textContent =
+                message.text || "";
+
+
+            // Time
+
+            const messageTime =
+                document.createElement(
+                    "span"
+                );
+
+            messageTime.classList.add(
+                "message-time"
+            );
+
+            messageTime.textContent =
+                formatTime(
+                    message.createdAt
+                );
+
+
+            // Build
+
+            bubble.appendChild(
+                messageText
+            );
+
+            bubble.appendChild(
+                messageTime
+            );
+
+            messageDiv.appendChild(
+                bubble
+            );
+
+            messagesElement.appendChild(
+                messageDiv
+            );
+
+
+            // Scroll
+
+            messagesElement.scrollTop =
+                messagesElement.scrollHeight;
+
+        }
+
+
+        // ==========================================
         // INITIALIZE CHAT
         // ==========================================
 
@@ -370,7 +513,7 @@
                 );
 
 
-                // Anonymous login
+                // Anonymous authentication
 
                 const userCredential =
                     await signInAnonymously(
@@ -382,7 +525,15 @@
                     userCredential.user;
 
 
-                // Room reference
+                console.log(
+                    "CURRENT USER UID:",
+                    currentUser.uid
+                );
+
+
+                // ==================================
+                // REFERENCES
+                // ==================================
 
                 roomRef =
                     ref(
@@ -391,8 +542,6 @@
                         roomCode
                     );
 
-
-                // User reference
 
                 userRef =
                     ref(
@@ -403,8 +552,6 @@
                         currentUser.uid
                     );
 
-
-                // Messages reference
 
                 messagesRef =
                     ref(
@@ -438,18 +585,28 @@
 
 
                 // ==================================
-                // CHECK USER COUNT
+                // CHECK USERS
                 // ==================================
 
                 const roomData =
                     roomSnapshot.val();
 
+
                 const users =
                     roomData.users || {};
+
 
                 const userIds =
                     Object.keys(users);
 
+
+                /*
+                 * If this user is already in the room,
+                 * allow them back in.
+                 *
+                 * This is important for the creator
+                 * after refresh/tab switching.
+                 */
 
                 if (
                     !users[currentUser.uid] &&
@@ -469,7 +626,7 @@
 
 
                 // ==================================
-                // ADD USER
+                // ADD / RESTORE USER
                 // ==================================
 
                 await set(
@@ -478,17 +635,21 @@
                 );
 
 
-                // ==================================
-                // AUTO REMOVE USER ON DISCONNECT
-                // ==================================
+                /*
+                 * IMPORTANT:
+                 *
+                 * We intentionally DO NOT use:
+                 *
+                 * onDisconnect(userRef).remove()
+                 *
+                 * because that was causing the creator's
+                 * membership to disappear while the page
+                 * was still being used.
+                 */
 
-                await onDisconnect(
-                    userRef
-                ).remove();
-
 
                 // ==================================
-                // ONLINE STATUS
+                // CONNECTED
                 // ==================================
 
                 setStatus(
@@ -514,7 +675,7 @@
 
 
                 // ==================================
-                // WATCH USERS
+                // WATCH USER COUNT
                 // ==================================
 
                 onValue(
@@ -525,10 +686,11 @@
                         "/users"
                     ),
 
-                    async (snapshot) => {
+                    (snapshot) => {
 
                         const users =
                             snapshot.val() || {};
+
 
                         const count =
                             Object.keys(
@@ -536,25 +698,30 @@
                             ).length;
 
 
-                        if (count === 0) {
+                        if (count === 1) {
 
-                            if (!leaving) {
+                            setStatus(
+                                "Connected • 1/2",
+                                true
+                            );
 
-                                try {
+                        }
 
-                                    await remove(
-                                        roomRef
-                                    );
+                        else if (count >= 2) {
 
-                                } catch (error) {
+                            setStatus(
+                                "Connected • 2/2",
+                                true
+                            );
 
-                                    console.error(
-                                        error
-                                    );
+                        }
 
-                                }
+                        else {
 
-                            }
+                            setStatus(
+                                "Connected",
+                                true
+                            );
 
                         }
 
@@ -577,8 +744,6 @@
                 );
 
 
-                // Focus input
-
                 messageInput.focus();
 
 
@@ -589,193 +754,22 @@
                     error
                 );
 
+
                 setStatus(
                     "Connection failed",
                     false
                 );
 
+
                 alert(
                     "Could not open this chat."
                 );
+
 
                 window.location.href =
                     "index.html";
 
             }
-
-        }
-
-
-        // ==========================================
-        // DISPLAY MESSAGE
-        // ==========================================
-
-        function displayMessage(
-            message
-        ) {
-
-            if (!message) {
-                return;
-            }
-
-
-            // Remove empty message
-
-            if (
-                emptyMessage &&
-                emptyMessage.parentNode
-            ) {
-
-                emptyMessage.remove();
-
-            }
-
-
-            // ======================================
-            // MESSAGE WRAPPER
-            // ======================================
-
-            const messageDiv =
-                document.createElement(
-                    "div"
-                );
-
-
-            messageDiv.classList.add(
-                "message"
-            );
-
-
-            // ======================================
-            // CHECK WHO SENT MESSAGE
-            // ======================================
-
-            if (
-                currentUser &&
-                message.userId ===
-                currentUser.uid
-            ) {
-
-                messageDiv.classList.add(
-                    "my-message"
-                );
-
-            } else {
-
-                messageDiv.classList.add(
-                    "other-message"
-                );
-
-            }
-
-
-            // ======================================
-            // MESSAGE BUBBLE
-            // ======================================
-
-            const bubble =
-                document.createElement(
-                    "div"
-                );
-
-            bubble.classList.add(
-                "message-bubble"
-            );
-
-
-            // ======================================
-            // MESSAGE TEXT
-            // ======================================
-
-            const messageText =
-                document.createElement(
-                    "div"
-                );
-
-            messageText.classList.add(
-                "message-text"
-            );
-
-            messageText.textContent =
-                message.text || "";
-
-
-            // ======================================
-            // MESSAGE TIME
-            // ======================================
-
-            const messageTime =
-                document.createElement(
-                    "span"
-                );
-
-            messageTime.classList.add(
-                "message-time"
-            );
-
-            messageTime.textContent =
-                formatTime(
-                    message.createdAt
-                );
-
-
-            // ======================================
-            // BUILD MESSAGE
-            // ======================================
-
-            bubble.appendChild(
-                messageText
-            );
-
-            bubble.appendChild(
-                messageTime
-            );
-
-            messageDiv.appendChild(
-                bubble
-            );
-
-            messagesElement.appendChild(
-                messageDiv
-            );
-
-
-            // ======================================
-            // AUTO SCROLL
-            // ======================================
-
-            messagesElement.scrollTop =
-                messagesElement.scrollHeight;
-
-        }
-
-
-        // ==========================================
-        // FORMAT TIME
-        // ==========================================
-
-        function formatTime(
-            timestamp
-        ) {
-
-            if (!timestamp) {
-
-                return "";
-
-            }
-
-
-            const date =
-                new Date(timestamp);
-
-
-            return date.toLocaleTimeString(
-                [],
-                {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                }
-            );
 
         }
 
@@ -801,11 +795,43 @@
 
 
                 if (!currentUser) {
+
+                    alert(
+                        "Chat is not connected yet."
+                    );
+
                     return;
+
                 }
 
 
                 try {
+
+                    /*
+                     * Make sure our membership still exists
+                     * before sending.
+                     */
+
+                    const userSnapshot =
+                        await get(userRef);
+
+
+                    if (!userSnapshot.exists()) {
+
+                        /*
+                         * Restore membership if it was
+                         * somehow removed.
+                         */
+
+                        await set(
+                            userRef,
+                            true
+                        );
+
+                    }
+
+
+                    // Create message
 
                     const newMessage =
                         push(
@@ -841,6 +867,7 @@
                         "SEND MESSAGE ERROR:",
                         error
                     );
+
 
                     alert(
                         "Message could not be sent."
@@ -889,6 +916,7 @@
                 } catch (error) {
 
                     console.error(
+                        "COPY ERROR:",
                         error
                     );
 
@@ -956,6 +984,7 @@
                         error
                     );
 
+
                     window.location.href =
                         "index.html";
 
@@ -966,7 +995,7 @@
 
 
         // ==========================================
-        // START CHAT
+        // START
         // ==========================================
 
         initializeChat();
