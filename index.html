@@ -59,48 +59,60 @@
 
     </main>
 
-    <!-- Firebase -->
+
     <script type="module">
 
-        import { initializeApp } from
-        "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+        import { initializeApp }
+        from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 
         import {
             getAuth,
             signInAnonymously
-        } from
-        "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+        }
+        from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
         import {
             getDatabase,
             ref,
             set,
             get
-        } from
-        "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+        }
+        from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
 
+
+        // =========================
+        // FIREBASE CONFIGURATION
+        // =========================
 
         const firebaseConfig = {
 
-            apiKey: "AIzaSyCBmRCHSEcRLftZ52_w02sbRpFPEQw0cxU",
+            apiKey:
+                "AIzaSyCBmRCHsecRLftZ52_w02sbRpFPEQwOcxU",
 
-            authDomain: "temp-chat-b15be.firebaseapp.com",
+            authDomain:
+                "temp-chat-b15be.firebaseapp.com",
 
             databaseURL:
-            "https://temp-chat-b15be-default-rtdb.asia-southeast1.firebasedatabase.app",
+                "https://temp-chat-b15be-default-rtdb.asia-southeast1.firebasedatabase.app",
 
-            projectId: "temp-chat-b15be",
+            projectId:
+                "temp-chat-b15be",
 
             storageBucket:
-            "temp-chat-b15be.firebasestorage.app",
+                "temp-chat-b15be.firebasestorage.app",
 
-            messagingSenderId: "1086824753488",
+            messagingSenderId:
+                "1086824753488",
 
             appId:
-            "1:1086824753488:web:e801b6e773ceb94e076455"
+                "1:1086824753488:web:e801b6e773ceb94e076455"
 
         };
 
+
+        // =========================
+        // INITIALIZE FIREBASE
+        // =========================
 
         const app = initializeApp(firebaseConfig);
 
@@ -108,6 +120,10 @@
 
         const db = getDatabase(app);
 
+
+        // =========================
+        // ELEMENTS
+        // =========================
 
         const createButton =
             document.getElementById("createRoom");
@@ -122,7 +138,10 @@
             document.getElementById("errorMessage");
 
 
-        // Generate a 6-character room code
+        // =========================
+        // GENERATE ROOM CODE
+        // =========================
+
         function generateRoomCode() {
 
             const characters =
@@ -134,7 +153,8 @@
 
                 code += characters[
                     Math.floor(
-                        Math.random() * characters.length
+                        Math.random() *
+                        characters.length
                     )
                 ];
 
@@ -144,7 +164,10 @@
         }
 
 
-        // Show an error
+        // =========================
+        // SHOW ERROR
+        // =========================
+
         function showError(message) {
 
             errorMessage.textContent = message;
@@ -152,202 +175,308 @@
         }
 
 
-        // Create a new chat
-        createButton.addEventListener("click", async () => {
+        // =========================
+        // CREATE CHAT
+        // =========================
 
-            try {
+        createButton.addEventListener(
+            "click",
+            async () => {
 
-                errorMessage.textContent = "";
+                try {
 
-                const userCredential =
-                    await signInAnonymously(auth);
+                    errorMessage.textContent = "";
 
-                const user =
-                    userCredential.user;
+                    createButton.disabled = true;
 
-                let roomCode;
-                let roomRef;
-                let roomExists = true;
+                    createButton.textContent =
+                        "Creating...";
 
 
-                // Make sure the generated code is unused
-                while (roomExists) {
+                    // Anonymous login
 
-                    roomCode =
-                        generateRoomCode();
+                    const userCredential =
+                        await signInAnonymously(auth);
 
-                    roomRef =
-                        ref(db, "rooms/" + roomCode);
+                    const user =
+                        userCredential.user;
+
+
+                    let roomCode;
+
+                    let roomRef;
+
+                    let roomExists = true;
+
+
+                    // Find unused room code
+
+                    while (roomExists) {
+
+                        roomCode =
+                            generateRoomCode();
+
+                        roomRef =
+                            ref(
+                                db,
+                                "rooms/" + roomCode
+                            );
+
+                        const snapshot =
+                            await get(roomRef);
+
+                        roomExists =
+                            snapshot.exists();
+
+                    }
+
+
+                    // Create room
+
+                    await set(
+                        roomRef,
+                        {
+
+                            createdAt:
+                                Date.now(),
+
+                            users: {
+
+                                [user.uid]: true
+
+                            },
+
+                            messages: {}
+
+                        }
+                    );
+
+
+                    // Save session
+
+                    sessionStorage.setItem(
+                        "tempChatUser",
+                        user.uid
+                    );
+
+                    sessionStorage.setItem(
+                        "tempChatRoom",
+                        roomCode
+                    );
+
+
+                    // Open chat
+
+                    window.location.href =
+                        "chat.html?room=" +
+                        roomCode;
+
+
+                } catch (error) {
+
+                    console.error(
+                        "CREATE CHAT ERROR:",
+                        error
+                    );
+
+                    showError(
+                        "Could not create chat. Please try again."
+                    );
+
+                    createButton.disabled = false;
+
+                    createButton.textContent =
+                        "Create Chat";
+
+                }
+
+            }
+        );
+
+
+        // =========================
+        // JOIN CHAT
+        // =========================
+
+        joinButton.addEventListener(
+            "click",
+            async () => {
+
+                try {
+
+                    errorMessage.textContent = "";
+
+                    joinButton.disabled = true;
+
+                    joinButton.textContent =
+                        "Joining...";
+
+
+                    const roomCode =
+                        roomInput.value
+                            .trim()
+                            .toUpperCase();
+
+
+                    // Check code
+
+                    if (roomCode.length !== 6) {
+
+                        showError(
+                            "Enter a valid 6-character code."
+                        );
+
+                        joinButton.disabled = false;
+
+                        joinButton.textContent =
+                            "Join Chat";
+
+                        return;
+
+                    }
+
+
+                    // Anonymous login
+
+                    const userCredential =
+                        await signInAnonymously(auth);
+
+                    const user =
+                        userCredential.user;
+
+
+                    // Get room
+
+                    const roomRef =
+                        ref(
+                            db,
+                            "rooms/" + roomCode
+                        );
 
                     const snapshot =
                         await get(roomRef);
 
-                    roomExists =
-                        snapshot.exists();
 
-                }
+                    // Room doesn't exist
 
+                    if (!snapshot.exists()) {
 
-                // Create the room
-                await set(roomRef, {
+                        showError(
+                            "Chat not found."
+                        );
 
-                    createdAt:
-                        Date.now(),
+                        joinButton.disabled = false;
 
-                    users: {
+                        joinButton.textContent =
+                            "Join Chat";
 
-                        [user.uid]: true
+                        return;
 
-                    },
-
-                    messages: {}
-
-                });
+                    }
 
 
-                // Save current user information
-                sessionStorage.setItem(
-                    "tempChatUser",
-                    user.uid
-                );
-
-                sessionStorage.setItem(
-                    "tempChatRoom",
-                    roomCode
-                );
+                    const room =
+                        snapshot.val();
 
 
-                // Open chat
-                window.location.href =
-                    "chat.html?room=" +
-                    roomCode;
-
-            } catch (error) {
-
-                console.error(error);
-
-                showError(
-                    "Could not create chat. Please try again."
-                );
-
-            }
-
-        });
+                    const users =
+                        room.users || {};
 
 
-        // Join existing chat
-        joinButton.addEventListener("click", async () => {
-
-            try {
-
-                errorMessage.textContent = "";
-
-                const roomCode =
-                    roomInput.value
-                        .trim()
-                        .toUpperCase();
+                    const userCount =
+                        Object.keys(users).length;
 
 
-                if (roomCode.length !== 6) {
+                    // Maximum 2 users
 
-                    showError(
-                        "Enter a valid 6-character code."
+                    if (userCount >= 2) {
+
+                        showError(
+                            "This chat is already full."
+                        );
+
+                        joinButton.disabled = false;
+
+                        joinButton.textContent =
+                            "Join Chat";
+
+                        return;
+
+                    }
+
+
+                    // Add user
+
+                    await set(
+                        ref(
+                            db,
+                            "rooms/" +
+                            roomCode +
+                            "/users/" +
+                            user.uid
+                        ),
+                        true
                     );
 
-                    return;
 
-                }
+                    // Save session
 
-
-                const userCredential =
-                    await signInAnonymously(auth);
-
-                const user =
-                    userCredential.user;
-
-
-                const roomRef =
-                    ref(db, "rooms/" + roomCode);
-
-
-                const snapshot =
-                    await get(roomRef);
-
-
-                if (!snapshot.exists()) {
-
-                    showError(
-                        "Chat not found."
-                    );
-
-                    return;
-
-                }
-
-
-                const room =
-                    snapshot.val();
-
-
-                const users =
-                    room.users || {};
-
-
-                const userCount =
-                    Object.keys(users).length;
-
-
-                if (userCount >= 2) {
-
-                    showError(
-                        "This chat is already full."
-                    );
-
-                    return;
-
-                }
-
-
-                // Add this user
-                await set(
-                    ref(
-                        db,
-                        "rooms/" +
-                        roomCode +
-                        "/users/" +
+                    sessionStorage.setItem(
+                        "tempChatUser",
                         user.uid
-                    ),
-                    true
-                );
+                    );
+
+                    sessionStorage.setItem(
+                        "tempChatRoom",
+                        roomCode
+                    );
 
 
-                sessionStorage.setItem(
-                    "tempChatUser",
-                    user.uid
-                );
+                    // Open chat
 
-                sessionStorage.setItem(
-                    "tempChatRoom",
-                    roomCode
-                );
+                    window.location.href =
+                        "chat.html?room=" +
+                        roomCode;
 
 
-                window.location.href =
-                    "chat.html?room=" +
-                    roomCode;
+                } catch (error) {
 
+                    console.error(
+                        "JOIN CHAT ERROR:",
+                        error
+                    );
 
-            } catch (error) {
+                    showError(
+                        "Could not join chat. Please try again."
+                    );
 
-                console.error(error);
+                    joinButton.disabled = false;
 
-                showError(
-                    "Could not join chat. Please try again."
-                );
+                    joinButton.textContent =
+                        "Join Chat";
+
+                }
 
             }
+        );
 
-        });
+
+        // =========================
+        // ENTER KEY TO JOIN
+        // =========================
+
+        roomInput.addEventListener(
+            "keydown",
+            (event) => {
+
+                if (event.key === "Enter") {
+
+                    joinButton.click();
+
+                }
+
+            }
+        );
 
     </script>
 
