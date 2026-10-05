@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Temp Chat</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="home">
+
+        <div class="container">
+
+            <h1>Temp Chat</h1>
+
+            <p class="subtitle">
+                A temporary place to talk.
+            </p>
+
+            <div class="actions">
+
+                <button id="createRoom" class="primary-btn">
+                    Create Chat
+                </button>
+
+                <div class="divider">
+                    <span>or</span>
+                </div>
+
+                <div class="join-box">
+
+                    <input
+                        type="text"
+                        id="roomCode"
+                        placeholder="Enter chat code"
+                        maxlength="6"
+                        autocomplete="off"
+                    >
+
+                    <button id="joinRoom" class="secondary-btn">
+                        Join Chat
+                    </button>
+
+                </div>
+
+                <p id="errorMessage" class="error"></p>
+
+            </div>
+
+            <p class="note">
+                No account required. Temporary conversations.
+            </p>
+
+        </div>
+
+    </main>
+
+    <!-- Firebase -->
+    <script type="module">
+
+        import { initializeApp } from
+        "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+
+        import {
+            getAuth,
+            signInAnonymously
+        } from
+        "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
+        import {
+            getDatabase,
+            ref,
+            set,
+            get
+        } from
+        "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+
+
+        const firebaseConfig = {
+
+            apiKey: "AIzaSyCBmRCHSEcRLftZ52_w02sbRpFPEQw0cxU",
+
+            authDomain: "temp-chat-b15be.firebaseapp.com",
+
+            databaseURL:
+            "https://temp-chat-b15be-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+            projectId: "temp-chat-b15be",
+
+            storageBucket:
+            "temp-chat-b15be.firebasestorage.app",
+
+            messagingSenderId: "1086824753488",
+
+            appId:
+            "1:1086824753488:web:e801b6e773ceb94e076455"
+
+        };
+
+
+        const app = initializeApp(firebaseConfig);
+
+        const auth = getAuth(app);
+
+        const db = getDatabase(app);
+
+
+        const createButton =
+            document.getElementById("createRoom");
+
+        const joinButton =
+            document.getElementById("joinRoom");
+
+        const roomInput =
+            document.getElementById("roomCode");
+
+        const errorMessage =
+            document.getElementById("errorMessage");
+
+
+        // Generate a 6-character room code
+        function generateRoomCode() {
+
+            const characters =
+                "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+            let code = "";
+
+            for (let i = 0; i < 6; i++) {
+
+                code += characters[
+                    Math.floor(
+                        Math.random() * characters.length
+                    )
+                ];
+
+            }
+
+            return code;
+        }
+
+
+        // Show an error
+        function showError(message) {
+
+            errorMessage.textContent = message;
+
+        }
+
+
+        // Create a new chat
+        createButton.addEventListener("click", async () => {
+
+            try {
+
+                errorMessage.textContent = "";
+
+                const userCredential =
+                    await signInAnonymously(auth);
+
+                const user =
+                    userCredential.user;
+
+                let roomCode;
+                let roomRef;
+                let roomExists = true;
+
+
+                // Make sure the generated code is unused
+                while (roomExists) {
+
+                    roomCode =
+                        generateRoomCode();
+
+                    roomRef =
+                        ref(db, "rooms/" + roomCode);
+
+                    const snapshot =
+                        await get(roomRef);
+
+                    roomExists =
+                        snapshot.exists();
+
+                }
+
+
+                // Create the room
+                await set(roomRef, {
+
+                    createdAt:
+                        Date.now(),
+
+                    users: {
+
+                        [user.uid]: true
+
+                    },
+
+                    messages: {}
+
+                });
+
+
+                // Save current user information
+                sessionStorage.setItem(
+                    "tempChatUser",
+                    user.uid
+                );
+
+                sessionStorage.setItem(
+                    "tempChatRoom",
+                    roomCode
+                );
+
+
+                // Open chat
+                window.location.href =
+                    "chat.html?room=" +
+                    roomCode;
+
+            } catch (error) {
+
+                console.error(error);
+
+                showError(
+                    "Could not create chat. Please try again."
+                );
+
+            }
+
+        });
+
+
+        // Join existing chat
+        joinButton.addEventListener("click", async () => {
+
+            try {
+
+                errorMessage.textContent = "";
+
+                const roomCode =
+                    roomInput.value
+                        .trim()
+                        .toUpperCase();
+
+
+                if (roomCode.length !== 6) {
+
+                    showError(
+                        "Enter a valid 6-character code."
+                    );
+
+                    return;
+
+                }
+
+
+                const userCredential =
+                    await signInAnonymously(auth);
+
+                const user =
+                    userCredential.user;
+
+
+                const roomRef =
+                    ref(db, "rooms/" + roomCode);
+
+
+                const snapshot =
+                    await get(roomRef);
+
+
+                if (!snapshot.exists()) {
+
+                    showError(
+                        "Chat not found."
+                    );
+
+                    return;
+
+                }
+
+
+                const room =
+                    snapshot.val();
+
+
+                const users =
+                    room.users || {};
+
+
+                const userCount =
+                    Object.keys(users).length;
+
+
+                if (userCount >= 2) {
+
+                    showError(
+                        "This chat is already full."
+                    );
+
+                    return;
+
+                }
+
+
+                // Add this user
+                await set(
+                    ref(
+                        db,
+                        "rooms/" +
+                        roomCode +
+                        "/users/" +
+                        user.uid
+                    ),
+                    true
+                );
+
+
+                sessionStorage.setItem(
+                    "tempChatUser",
+                    user.uid
+                );
+
+                sessionStorage.setItem(
+                    "tempChatRoom",
+                    roomCode
+                );
+
+
+                window.location.href =
+                    "chat.html?room=" +
+                    roomCode;
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                showError(
+                    "Could not join chat. Please try again."
+                );
+
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>
