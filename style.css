@@ -1,0 +1,222 @@
+/* =========================
+   TEMP CHAT
+   Simple black / brown / white
+   ========================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #0d0d0d;
+    color: #f5f5f5;
+    font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+}
+
+
+/* =========================
+   HOME PAGE
+   ========================= */
+
+.home {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 440px;
+    text-align: center;
+}
+
+.container h1 {
+    font-size: 42px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+}
+
+.subtitle {
+    color: #999;
+    font-size: 16px;
+    margin-bottom: 45px;
+}
+
+.actions {
+    width: 100%;
+}
+
+
+/* =========================
+   BUTTONS
+   ========================= */
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+}
+
+.primary-btn {
+    width: 100%;
+    height: 52px;
+
+    background: #6b4f3a;
+    color: #ffffff;
+
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    border: 1px solid #6b4f3a;
+}
+
+.primary-btn:hover {
+    background: #7c5b43;
+}
+
+.secondary-btn {
+    height: 52px;
+    padding: 0 24px;
+
+    background: transparent;
+    color: #ffffff;
+
+    border: 1px solid #6b4f3a;
+
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.secondary-btn:hover {
+    background: #6b4f3a;
+}
+
+
+/* =========================
+   DIVIDER
+   ========================= */
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    margin: 28px 0;
+
+    color: #666;
+
+    font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    height: 1px;
+    background: #292929;
+    flex: 1;
+}
+
+
+/* =========================
+   JOIN BOX
+   ========================= */
+
+.join-box {
+    display: flex;
+    width: 100%;
+}
+
+.join-box input {
+    flex: 1;
+
+    min-width: 0;
+
+    height: 52px;
+
+    background: #151515;
+    color: #ffffff;
+
+    border: 1px solid #333;
+    border-right: none;
+
+    padding: 0 15px;
+
+    font-size: 15px;
+
+    outline: none;
+}
+
+.join-box input:focus {
+    border-color: #6b4f3a;
+}
+
+.join-box input::placeholder {
+    color: #666;
+}
+
+
+/* =========================
+   ERROR
+   ========================= */
+
+.error {
+    min-height: 22px;
+
+    margin-top: 15px;
+
+    color: #c9826b;
+
+    font-size: 13px;
+}
+
+
+/* =========================
+   NOTE
+   ========================= */
+
+.note {
+    margin-top: 45px;
+
+    color: #555;
+
+    font-size: 12px;
+}
+
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 500px) {
+
+    .container h1 {
+        font-size: 34px;
+    }
+
+    .subtitle {
+        margin-bottom: 35px;
+    }
+
+    .join-box {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .join-box input {
+        border-right: 1px solid #333;
+    }
+
+    .secondary-btn {
+        width: 100%;
+    }
+
+}
