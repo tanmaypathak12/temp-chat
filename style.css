@@ -1,5 +1,260 @@
 /* =========================================
-   NEW WHATSAPP / INSTAGRAM STYLE CHAT
+   RESET
+   ========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================
+   GLOBAL
+   ========================================= */
+
+body {
+    background: #0d0d0d;
+    color: #f5f5f5;
+}
+
+
+/* =========================================
+   HOME PAGE
+   ========================================= */
+
+.home {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: #0d0d0d;
+}
+
+.container {
+    width: 100%;
+    max-width: 460px;
+    padding: 40px;
+    background: #151515;
+    border: 1px solid #3a2a20;
+    border-radius: 8px;
+}
+
+.container h1 {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.subtitle {
+    margin-top: 10px;
+    color: #a89588;
+    font-size: 15px;
+}
+
+.actions {
+    margin-top: 30px;
+}
+
+.primary-btn,
+.secondary-btn {
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.primary-btn {
+    background: #6b4f3a;
+    color: #ffffff;
+    border: 1px solid #6b4f3a;
+}
+
+.primary-btn:hover {
+    background: #80604a;
+}
+
+.secondary-btn {
+    background: transparent;
+    color: #ffffff;
+    border: 1px solid #6b4f3a;
+}
+
+.secondary-btn:hover {
+    background: #6b4f3a;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 22px 0;
+    color: #6f625a;
+    font-size: 13px;
+}
+
+.join-box {
+    display: flex;
+    gap: 8px;
+}
+
+.join-box input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px;
+    background: #0f0f0f;
+    color: #ffffff;
+    border: 1px solid #3a2a20;
+    border-radius: 5px;
+    outline: none;
+    font-size: 14px;
+}
+
+.join-box input:focus {
+    border-color: #6b4f3a;
+}
+
+.join-box .secondary-btn {
+    width: auto;
+    white-space: nowrap;
+}
+
+.error {
+    min-height: 20px;
+    margin-top: 12px;
+    color: #c88f78;
+    font-size: 13px;
+}
+
+.note {
+    margin-top: 30px;
+    margin-bottom: 0;
+    color: #6f625a;
+    font-size: 12px;
+    text-align: center;
+}
+
+
+/* =========================================
+   CHAT PAGE
+   ========================================= */
+
+.chat-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    background: #0d0d0d;
+}
+
+.chat-container {
+    width: 100%;
+    max-width: 900px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #0d0d0d;
+}
+
+
+/* =========================================
+   CHAT HEADER
+   ========================================= */
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #151515;
+    border-bottom: 1px solid #3a2a20;
+}
+
+.chat-header h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.room-info {
+    margin: 5px 0 0;
+    color: #a89588;
+    font-size: 13px;
+}
+
+.room-info strong {
+    color: #ffffff;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.small-btn,
+.leave-btn {
+    padding: 8px 12px;
+    background: transparent;
+    color: #f5f5f5;
+    border: 1px solid #6b4f3a;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.small-btn:hover {
+    background: #6b4f3a;
+}
+
+.leave-btn {
+    border-color: #7b4545;
+}
+
+.leave-btn:hover {
+    background: #7b4545;
+}
+
+
+/* =========================================
+   STATUS
+   ========================================= */
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    padding: 7px 20px;
+    background: #111111;
+    color: #8f8177;
+    font-size: 12px;
+    border-bottom: 1px solid #211a16;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 7px;
+    background: #7b4545;
+    border-radius: 50%;
+}
+
+.status-dot.online {
+    background: #6b4f3a;
+}
+
+
+/* =========================================
+   MESSAGE AREA
    ========================================= */
 
 .messages {
@@ -12,7 +267,11 @@
     background: #0d0d0d;
 }
 
-/* Every message takes full width */
+
+/* =========================================
+   MESSAGE WRAPPER
+   ========================================= */
+
 .message {
     width: 100%;
     display: flex;
@@ -20,17 +279,25 @@
     padding: 0;
 }
 
+
 /* MY MESSAGE - RIGHT */
+
 .message.my-message {
     justify-content: flex-end;
 }
 
+
 /* OTHER MESSAGE - LEFT */
+
 .message.other-message {
     justify-content: flex-start;
 }
 
-/* THE ACTUAL BUBBLE */
+
+/* =========================================
+   MESSAGE BUBBLE
+   ========================================= */
+
 .message-bubble {
     display: inline-block;
     max-width: 70%;
@@ -42,44 +309,132 @@
     overflow-wrap: anywhere;
 }
 
+
 /* MY BUBBLE */
+
 .message.my-message .message-bubble {
     background: #6b4f3a !important;
     color: #ffffff !important;
     border-radius: 13px 13px 3px 13px;
 }
 
+
 /* OTHER BUBBLE */
+
 .message.other-message .message-bubble {
     background: #f1f1f1 !important;
     color: #171717 !important;
     border-radius: 13px 13px 13px 3px;
 }
 
-/* MESSAGE TEXT */
+
+/* =========================================
+   MESSAGE TEXT
+   ========================================= */
+
 .message-text {
     display: block;
     white-space: pre-wrap;
 }
 
-/* TIME */
+
+/* =========================================
+   MESSAGE TIME
+   ========================================= */
+
 .message-time {
     display: block;
-    margin-top: 3px;
+    margin-top: 4px;
     font-size: 10px;
     line-height: 1;
     opacity: 0.65;
     text-align: right;
 }
 
-/* MY MESSAGE TIME */
 .message.my-message .message-time {
     color: #ffffff;
 }
 
-/* OTHER MESSAGE TIME */
 .message.other-message .message-time {
     color: #333333;
+}
+
+
+/* =========================================
+   EMPTY CHAT
+   ========================================= */
+
+.empty-message {
+    margin: auto;
+    color: #6f625a;
+    font-size: 14px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+
+/* =========================================
+   MESSAGE INPUT
+   ========================================= */
+
+.message-form {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #151515;
+    border-top: 1px solid #3a2a20;
+}
+
+.message-form input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 14px;
+    background: #0f0f0f;
+    color: #ffffff;
+    border: 1px solid #3a2a20;
+    border-radius: 5px;
+    outline: none;
+    font-size: 14px;
+}
+
+.message-form input::placeholder {
+    color: #6f625a;
+}
+
+.message-form input:focus {
+    border-color: #6b4f3a;
+}
+
+.send-btn {
+    padding: 0 20px;
+    background: #6b4f3a;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.send-btn:hover {
+    background: #80604a;
+}
+
+
+/* =========================================
+   SCROLLBAR
+   ========================================= */
+
+.messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages::-webkit-scrollbar-track {
+    background: #0d0d0d;
+}
+
+.messages::-webkit-scrollbar-thumb {
+    background: #3a2a20;
+    border-radius: 10px;
 }
 
 
@@ -88,6 +443,40 @@
    ========================================= */
 
 @media (max-width: 600px) {
+
+    .home {
+        padding: 15px;
+    }
+
+    .container {
+        padding: 28px 20px;
+    }
+
+    .container h1 {
+        font-size: 28px;
+    }
+
+    .chat-header {
+        padding: 12px;
+    }
+
+    .chat-header h1 {
+        font-size: 18px;
+    }
+
+    .room-info {
+        font-size: 12px;
+    }
+
+    .header-actions {
+        gap: 5px;
+    }
+
+    .small-btn,
+    .leave-btn {
+        padding: 7px 9px;
+        font-size: 11px;
+    }
 
     .messages {
         padding: 12px;
@@ -98,6 +487,14 @@
         max-width: 82%;
         padding: 8px 12px;
         font-size: 14px;
+    }
+
+    .message-form {
+        padding: 10px;
+    }
+
+    .send-btn {
+        padding: 0 15px;
     }
 
 }
