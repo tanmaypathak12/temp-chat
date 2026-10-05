@@ -26,7 +26,6 @@
 
         <div class="chat-container">
 
-
             <!-- HEADER -->
 
             <header class="chat-header">
@@ -66,7 +65,6 @@
             </header>
 
 
-
             <!-- STATUS -->
 
             <div class="status-bar">
@@ -81,7 +79,6 @@
                 </span>
 
             </div>
-
 
 
             <!-- MESSAGES -->
@@ -101,7 +98,6 @@
                 </div>
 
             </section>
-
 
 
             <!-- INPUT -->
@@ -128,15 +124,12 @@
 
             </form>
 
-
         </div>
 
     </main>
 
 
-
     <script type="module">
-
 
         // ==========================================
         // FIREBASE IMPORTS
@@ -172,7 +165,6 @@
         "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
 
 
-
         // ==========================================
         // FIREBASE CONFIG
         // ==========================================
@@ -203,7 +195,6 @@
         };
 
 
-
         // ==========================================
         // INITIALIZE FIREBASE
         // ==========================================
@@ -218,7 +209,6 @@
             getDatabase(app);
 
 
-
         // ==========================================
         // GET ROOM CODE
         // ==========================================
@@ -228,12 +218,10 @@
                 window.location.search
             );
 
-
         const roomCode =
             urlParams.get("room")
                 ?.trim()
                 .toUpperCase();
-
 
 
         // ==========================================
@@ -245,54 +233,45 @@
                 "roomCode"
             );
 
-
         const messagesElement =
             document.getElementById(
                 "messages"
             );
-
 
         const emptyMessage =
             document.getElementById(
                 "emptyMessage"
             );
 
-
         const messageForm =
             document.getElementById(
                 "messageForm"
             );
-
 
         const messageInput =
             document.getElementById(
                 "messageInput"
             );
 
-
         const copyCodeButton =
             document.getElementById(
                 "copyCode"
             );
-
 
         const leaveButton =
             document.getElementById(
                 "leaveChat"
             );
 
-
         const statusText =
             document.getElementById(
                 "statusText"
             );
 
-
         const statusDot =
             document.getElementById(
                 "connectionStatus"
             );
-
 
 
         // ==========================================
@@ -315,7 +294,6 @@
             roomCode;
 
 
-
         // ==========================================
         // VARIABLES
         // ==========================================
@@ -329,7 +307,6 @@
         let messagesRef = null;
 
         let leaving = false;
-
 
 
         // ==========================================
@@ -350,7 +327,6 @@
         }
 
 
-
         // ==========================================
         // SHOW STATUS
         // ==========================================
@@ -362,7 +338,6 @@
 
             statusText.textContent =
                 text;
-
 
             if (online) {
 
@@ -381,7 +356,6 @@
         }
 
 
-
         // ==========================================
         // INITIALIZE CHAT
         // ==========================================
@@ -389,7 +363,6 @@
         async function initializeChat() {
 
             try {
-
 
                 setStatus(
                     "Connecting...",
@@ -442,7 +415,6 @@
                     );
 
 
-
                 // ==================================
                 // CHECK ROOM
                 // ==================================
@@ -465,7 +437,6 @@
                 }
 
 
-
                 // ==================================
                 // CHECK USER COUNT
                 // ==================================
@@ -473,10 +444,8 @@
                 const roomData =
                     roomSnapshot.val();
 
-
                 const users =
                     roomData.users || {};
-
 
                 const userIds =
                     Object.keys(users);
@@ -499,7 +468,6 @@
                 }
 
 
-
                 // ==================================
                 // ADD USER
                 // ==================================
@@ -510,7 +478,6 @@
                 );
 
 
-
                 // ==================================
                 // AUTO REMOVE USER ON DISCONNECT
                 // ==================================
@@ -518,7 +485,6 @@
                 await onDisconnect(
                     userRef
                 ).remove();
-
 
 
                 // ==================================
@@ -531,9 +497,8 @@
                 );
 
 
-
                 // ==================================
-                // LOAD EXISTING MESSAGES
+                // LOAD MESSAGES
                 // ==================================
 
                 onChildAdded(
@@ -548,7 +513,6 @@
                 );
 
 
-
                 // ==================================
                 // WATCH USERS
                 // ==================================
@@ -560,6 +524,7 @@
                         roomCode +
                         "/users"
                     ),
+
                     async (snapshot) => {
 
                         const users =
@@ -597,7 +562,6 @@
                 );
 
 
-
                 // ==================================
                 // SAVE SESSION
                 // ==================================
@@ -607,12 +571,10 @@
                     currentUser.uid
                 );
 
-
                 sessionStorage.setItem(
                     "tempChatRoom",
                     roomCode
                 );
-
 
 
                 // Focus input
@@ -627,12 +589,10 @@
                     error
                 );
 
-
                 setStatus(
                     "Connection failed",
                     false
                 );
-
 
                 alert(
                     "Could not open this chat."
@@ -644,7 +604,6 @@
             }
 
         }
-
 
 
         // ==========================================
@@ -672,6 +631,9 @@
             }
 
 
+            // ======================================
+            // MESSAGE WRAPPER
+            // ======================================
 
             const messageDiv =
                 document.createElement(
@@ -679,12 +641,14 @@
                 );
 
 
-            messageDiv.className =
-                "message";
+            messageDiv.classList.add(
+                "message"
+            );
 
 
-
-            // Own message
+            // ======================================
+            // CHECK WHO SENT MESSAGE
+            // ======================================
 
             if (
                 currentUser &&
@@ -705,38 +669,85 @@
             }
 
 
+            // ======================================
+            // MESSAGE BUBBLE
+            // ======================================
 
-            const text =
-                escapeHTML(
-                    message.text || ""
+            const bubble =
+                document.createElement(
+                    "div"
+                );
+
+            bubble.classList.add(
+                "message-bubble"
+            );
+
+
+            // ======================================
+            // MESSAGE TEXT
+            // ======================================
+
+            const messageText =
+                document.createElement(
+                    "div"
+                );
+
+            messageText.classList.add(
+                "message-text"
+            );
+
+            messageText.textContent =
+                message.text || "";
+
+
+            // ======================================
+            // MESSAGE TIME
+            // ======================================
+
+            const messageTime =
+                document.createElement(
+                    "span"
+                );
+
+            messageTime.classList.add(
+                "message-time"
+            );
+
+            messageTime.textContent =
+                formatTime(
+                    message.createdAt
                 );
 
 
-            messageDiv.innerHTML =
-                `
-                <div class="message-text">
-                    ${text}
-                </div>
+            // ======================================
+            // BUILD MESSAGE
+            // ======================================
 
-                <div class="message-time">
-                    ${formatTime(message.createdAt)}
-                </div>
-                `;
+            bubble.appendChild(
+                messageText
+            );
 
+            bubble.appendChild(
+                messageTime
+            );
 
+            messageDiv.appendChild(
+                bubble
+            );
 
             messagesElement.appendChild(
                 messageDiv
             );
 
 
-            // Scroll to bottom
+            // ======================================
+            // AUTO SCROLL
+            // ======================================
 
             messagesElement.scrollTop =
                 messagesElement.scrollHeight;
 
         }
-
 
 
         // ==========================================
@@ -769,7 +780,6 @@
         }
 
 
-
         // ==========================================
         // SEND MESSAGE
         // ==========================================
@@ -786,21 +796,16 @@
 
 
                 if (!text) {
-
                     return;
-
                 }
 
 
                 if (!currentUser) {
-
                     return;
-
                 }
 
 
                 try {
-
 
                     const newMessage =
                         push(
@@ -837,7 +842,6 @@
                         error
                     );
 
-
                     alert(
                         "Message could not be sent."
                     );
@@ -846,7 +850,6 @@
 
             }
         );
-
 
 
         // ==========================================
@@ -895,7 +898,6 @@
         );
 
 
-
         // ==========================================
         // LEAVE CHAT
         // ==========================================
@@ -905,9 +907,7 @@
             async () => {
 
                 if (leaving) {
-
                     return;
-
                 }
 
 
@@ -918,9 +918,7 @@
 
 
                 if (!confirmed) {
-
                     return;
-
                 }
 
 
@@ -942,7 +940,6 @@
                         "tempChatUser"
                     );
 
-
                     sessionStorage.removeItem(
                         "tempChatRoom"
                     );
@@ -959,7 +956,6 @@
                         error
                     );
 
-
                     window.location.href =
                         "index.html";
 
@@ -969,9 +965,8 @@
         );
 
 
-
         // ==========================================
-        // START
+        // START CHAT
         // ==========================================
 
         initializeChat();
